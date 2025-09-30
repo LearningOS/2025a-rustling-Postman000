@@ -2,7 +2,6 @@
 	single linked list merge
 	This problem requires you to merge two ordered singly linked lists into one ordered singly linked list
 */
-// I AM NOT DONE
 
 use std::fmt::{self, Display, Formatter};
 use std::ptr::NonNull;
@@ -69,15 +68,54 @@ impl<T> LinkedList<T> {
             },
         }
     }
-	pub fn merge(list_a:LinkedList<T>,list_b:LinkedList<T>) -> Self
-	{
-		//TODO
-		Self {
-            length: 0,
-            start: None,
-            end: None,
+    pub fn merge(mut list_a: LinkedList<T>, mut list_b: LinkedList<T>) -> Self 
+    where 
+        T: PartialOrd + Clone,
+    {
+        let mut result = LinkedList::new();
+        
+        let mut current_a = list_a.start;
+        let mut current_b = list_b.start;
+        
+        // 防止原链表被释放时出现问题
+        list_a.start = None;
+        list_a.end = None;
+        list_b.start = None;
+        list_b.end = None;
+        
+        // 合并两个有序链表
+        while current_a.is_some() && current_b.is_some() {
+            unsafe {
+                let a_val = &(*current_a.unwrap().as_ptr()).val;
+                let b_val = &(*current_b.unwrap().as_ptr()).val;
+                
+                if a_val <= b_val {
+                    result.add(a_val.clone());
+                    current_a = (*current_a.unwrap().as_ptr()).next;
+                } else {
+                    result.add(b_val.clone());
+                    current_b = (*current_b.unwrap().as_ptr()).next;
+                }
+            }
         }
-	}
+        
+        // 添加剩余的元素
+        while let Some(node_ptr) = current_a {
+            unsafe {
+                result.add((*node_ptr.as_ptr()).val.clone());
+                current_a = (*node_ptr.as_ptr()).next;
+            }
+        }
+        
+        while let Some(node_ptr) = current_b {
+            unsafe {
+                result.add((*node_ptr.as_ptr()).val.clone());
+                current_b = (*node_ptr.as_ptr()).next;
+            }
+        }
+        
+        result
+    }
 }
 
 impl<T> Display for LinkedList<T>
